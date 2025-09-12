@@ -75,6 +75,6 @@
     "components/common-sidebar/nav-user.jsx",
     "components/common-sidebar/nav-projects.jsx",
     "components/common-sidebar/nav-main.jsx"
-  ],
+, "components/ui/revenueDashboard.jsx"  ],
   "exclude": ["node_modules"]
 }
