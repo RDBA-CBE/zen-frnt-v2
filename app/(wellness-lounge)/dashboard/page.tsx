@@ -18,12 +18,17 @@ import {
 import { useRouter } from "next/navigation";
 import Models from "@/imports/models.import";
 import { useSetState } from "@/utils/function.utils";
+import ProtectedRoute from "@/components/common-components/privateRouter";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-export default function Dashboard() {
+interface CountResponse {
+  count?: number;
+}
+
+const Dashboard=()=> {
   const router = useRouter();
   const [state, setState] = useSetState({
     counts: {},
@@ -45,7 +50,7 @@ export default function Dashboard() {
         payment,
         coupon,
         user,
-      ]: any = await Promise.all([
+      ] = await Promise.all<CountResponse>([
         Models.session.list(1, {}),
         Models.category.list(),
         Models.session.registrationList(1, {}),
@@ -479,3 +484,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+export default ProtectedRoute(Dashboard);
