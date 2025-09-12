@@ -1,19 +1,12 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import {
-  TrendingUp,
-  Users,
-  CreditCard,
-  Package,
-  DollarSign,
-  Calendar,
-} from "lucide-react";
+
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-const RevenueDashboard = (props: any) => {
+const RevenueDashboard = (props) => {
   const { reportData } = props;
   console.log("reportData: ", reportData);
 

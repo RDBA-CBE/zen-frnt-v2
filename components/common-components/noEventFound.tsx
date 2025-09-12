@@ -1,4 +1,4 @@
-import { Calendar, Clock, AlertCircle, Search, Home } from 'lucide-react';
+import {  AlertCircle, Search } from 'lucide-react';
 import Link from 'next/link';
 
 const NoEventFound = () => {
@@ -14,7 +14,7 @@ const NoEventFound = () => {
         <h2 className="text-2xl font-bold text-gray-800 mb-2">No Booking Found</h2>
         
         <p className="text-gray-600 mb-6">
-          We couldn't find the booking you're looking for. It might have been removed
+          {`We couldn't find the booking you're looking for. It might have been removed`}
         </p>
         
         <div className="space-y-4">

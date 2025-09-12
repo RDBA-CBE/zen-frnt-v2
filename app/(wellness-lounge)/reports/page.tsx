@@ -1,21 +1,9 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
+import React, { useEffect } from "react";
 import ProtectedRoute from "@/components/common-components/privateRouter";
-import { Dropdown, useSetState } from "@/utils/function.utils";
+import { useSetState } from "@/utils/function.utils";
 import Models from "@/imports/models.import";
-import moment from "moment";
-import AdminCalendar from "@/components/ui/adminCalender";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { set } from "date-fns";
-import CustomSelect from "@/components/common-components/dropdown";
-import { Card } from "@/components/ui/card";
-import { DataTable } from "@/components/ui/dataTable";
-import { Label } from "@/components/ui/label";
 import RevenueDashboard from "@/components/ui/revenueDashboard";
-const ReactApexChart = dynamic(() => import("react-apexcharts"), {
-  ssr: false,
-});
 
 const Dashboard = () => {
   const [state, setState] = useSetState({

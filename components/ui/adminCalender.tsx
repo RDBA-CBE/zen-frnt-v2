@@ -16,7 +16,6 @@ import {
 } from "@/utils/function.utils";
 import { CalendarClock, XIcon } from "lucide-react";
 import { Info } from "../common-components/toast";
-import DateTimeField from "../common-components/DateTimeField";
 import { AYURVEDIC_LOUNGE } from "@/utils/constant.utils";
 
 const daysOfWeek = [
@@ -52,7 +51,6 @@ const AdminCalendar = ({ registrations }) => {
     description: "",
     date: "",
   });
-  const [lougeList, setLoungeList] = useState([]);
   const [token, setToken] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
@@ -99,8 +97,7 @@ const AdminCalendar = ({ registrations }) => {
 
   const getRole = async () => {
     try {
-      let body = localStorage.getItem("group");
-      console.log("✌️body --->", body);
+      const body = localStorage.getItem("group");
       setState({ role: body });
     } catch (error) {
       console.log("error: ", error);
@@ -262,18 +259,6 @@ const AdminCalendar = ({ registrations }) => {
     });
   };
 
-  const addNewEvent = (clickedDate) => {
-    const dateToUse = clickedDate || selectedDate;
-    const now = new Date();
-    const finalDate = new Date(dateToUse);
-    finalDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
-
-    const formattedDate = moment(finalDate).format("DD-MM-YYYY HH:mm:ss");
-
-    router.push(
-      `/create-wellness-lounge?date=${encodeURIComponent(formattedDate)}`
-    );
-  };
 
   const handleOrderClick = (item) => {
     console.log("✌️item --->", item);

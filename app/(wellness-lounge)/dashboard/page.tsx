@@ -32,7 +32,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     getCount();
-    getReportData()
+    getReportData();
   }, []);
 
   const getCount = async () => {
