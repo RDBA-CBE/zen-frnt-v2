@@ -43,7 +43,6 @@ import { AYURVEDIC_LOUNGE } from "@/utils/constant.utils";
 import NoEventFound from "@/components/common-components/noEventFound";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import next from "next";
 import Image from "next/image";
 
 const viewWellnessLounge = () => {
