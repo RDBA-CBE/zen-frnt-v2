@@ -101,7 +101,6 @@ const App = () => {
     if (state.lounge_type) {
       body.lounge_type = state.lounge_type?.value;
     }
-
     return body;
   };
 
