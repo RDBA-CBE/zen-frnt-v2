@@ -683,14 +683,25 @@ const viewWellnessLounge = () => {
                     </div>
                   </blockquote>
                 )}
-                <div className="flex justify-end">
-                  <Button
-                    className="bg-themePurple hover:bg-themePurple"
-                    onClick={() => bookingSchedule()}
-                  >
-                    Book new appointment
-                  </Button>
-                </div>
+                {state?.group == "Admin" ? (
+                  <div className="flex justify-end">
+                    <Button
+                      className="bg-themePurple hover:bg-themePurple"
+                      onClick={() => router.back()}
+                    >
+                      Back
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex justify-end">
+                    <Button
+                      className="bg-themePurple hover:bg-themePurple"
+                      onClick={() => bookingSchedule()}
+                    >
+                      Book new appointment
+                    </Button>
+                  </div>
+                )}
                 {/* <div className="mt-3">
                   {state?.group == "Admin" ? (
                     <Button

@@ -395,6 +395,9 @@ const CreateUser = () => {
         localStorage.setItem("group", res.groups?.[0] || "");
         setState({ submitLoading: false });
         router.push("/");
+        // setTimeout(() => {
+        //   window.location.reload();
+        // }, 100);
 
         Success(
           `The account details for ${state.firstname} ${state.lastname} have been updated. All changes are now saved and reflected across the platform.`
@@ -474,6 +477,9 @@ const CreateUser = () => {
 
         setState({ submitLoading: false });
         router.push("/");
+        // setTimeout(() => {
+        //   window.location.reload();
+        // }, 100);
 
         Success(
           `The account details for ${state.firstname} ${state.lastname} have been updated. All changes are now saved and reflected across the platform.`

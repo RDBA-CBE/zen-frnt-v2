@@ -46,11 +46,8 @@ import Models from "@/imports/models.import";
 const Header = () => {
   const dispatch = useDispatch();
   const tokens = useSelector((state) => state.auth.tokens);
-  console.log("tokens: ", tokens);
   const groups = useSelector((state) => state.auth.groups);
-  console.log("groups: ", groups);
   const username = useSelector((state) => state.auth.username);
-  console.log("username: ", username);
 
   const [activeMenu, setActiveMenu] = useState(null);
   const [clickedMenu, setClickedMenu] = useState(null); // Track the clicked menu

@@ -239,3 +239,82 @@ export const extractZoomMeetingId = (url) => {
     return m ? m[1] : null;
   }
 };
+
+export const buildFormData = (data: Record<string, any>): FormData => {
+  const formData = new FormData();
+
+  Object.entries(data).forEach(([key, value]) => {
+    if (value === null || value === undefined) return;
+
+    // Arrays
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => {
+        formData.append(
+          `${key}`,
+          item instanceof File || item instanceof Blob ? item : String(item)
+        );
+      });
+    }
+    // Files / Blobs
+    else if (value instanceof File || value instanceof Blob) {
+      formData.append(key, value);
+    }
+    // Objects → stringify
+    else if (typeof value === "object") {
+      formData.append(key, JSON.stringify(value));
+    }
+    // Primitives
+    else {
+      formData.append(key, String(value));
+    }
+  });
+
+  return formData;
+};
+
+export const getTimeZone = (time) => {
+  const tz = time.split(")")[1].trim();
+  return tz;
+};
+
+export const getTime = (startDate, startTime) => {
+  const date = new Date(startDate);
+  const time = new Date(startTime);
+
+  // Extract date components from the first date
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+
+  // Extract time components from the second date
+  const hours = time.getHours();
+  const minutes = time.getMinutes();
+  const seconds = time.getSeconds();
+  const milliseconds = time.getMilliseconds();
+
+  // Create new date with combined values
+  const combinedDate = new Date(
+    year,
+    month,
+    day,
+    hours,
+    minutes,
+    seconds,
+    milliseconds
+  );
+  return combinedDate;
+};
+
+export const extractTimeFromDateTime = (dateTimeString) => {
+  if (!dateTimeString) return null;
+  
+  const timeMatch = dateTimeString.match(/(\d{1,2}):(\d{2}):(\d{2})/);
+  if (timeMatch) {
+    const [hours, minutes, seconds] = timeMatch[0].split(':').map(Number);
+    const timeDate = new Date();
+    timeDate.setHours(hours, minutes, seconds, 0);
+    return timeDate;
+  }
+  
+  return null;
+};

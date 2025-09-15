@@ -10,7 +10,7 @@ export default function BookingCalender({
   slotInterval = 60,
   getSlots,
   error,
-  eventSlot = []
+  eventSlot = [],
 }) {
   const [selectedDate, setSelectedDate] = useState(
     moment(startDate).format("YYYY-MM-DD")
@@ -26,6 +26,11 @@ export default function BookingCalender({
       getSlots(transformSlots(selectedSlots));
     }
   }, [selectedSlots]);
+
+  useEffect(() => {
+    setSelectedSlots([]);
+    setSelectedDate(moment(startDate).format("YYYY-MM-DD"));
+  }, [startDate]);
 
   // useEffect(() => {
   //   const initialSlots = {};
@@ -66,17 +71,17 @@ export default function BookingCalender({
     }
   }, [slotInterval]);
 
-   const days = useMemo(() => {
-     const start = moment(startDate);
-     const end = moment(endDate).add(1, "day"); 
-     const arr = [];
- 
-     for (let m = moment(start); m.isBefore(end); m.add(1, "days")) {
-       arr.push(moment(m));
-     }
- 
-     return arr;
-   }, [startDate, endDate]);
+  const days = useMemo(() => {
+    const start = moment(startDate);
+    const end = moment(endDate ? endDate : startDate).add(1, "day");
+    const arr = [];
+
+    for (let m = moment(start); m.isBefore(end); m.add(1, "days")) {
+      arr.push(moment(m));
+    }
+
+    return arr;
+  }, [startDate, endDate]);
 
   const generateSlots = () => {
     const slots = [];
@@ -155,29 +160,29 @@ export default function BookingCalender({
           }}
         />
       </div>
+      {days?.length > 0 && (
+        <div className="flex items-center gap-2 w-full">
+          <button
+            onClick={() => scroll("left")}
+            className="p-1 rounded-full hover:bg-gray-200"
+          >
+            <ChevronLeft size={28} />
+          </button>
 
-      <div className="flex items-center gap-2 w-full">
-        <button
-          onClick={() => scroll("left")}
-          className="p-1 rounded-full hover:bg-gray-200"
-        >
-          <ChevronLeft size={28} />
-        </button>
+          <div
+            ref={scrollRef}
+            className="flex gap-2 overflow-x-hidden px-2 py-3 scroll-smooth snap-x snap-mandatory w-full"
+          >
+            {days.map((day) => {
+              const formatted = day.format("YYYY-MM-DD");
+              const isSelected = formatted === selectedDate;
+              const hasSlots = selectedSlots[formatted]?.length > 0;
 
-        <div
-          ref={scrollRef}
-          className="flex gap-2 overflow-x-hidden px-2 py-3 scroll-smooth snap-x snap-mandatory w-full"
-        >
-          {days.map((day) => {
-            const formatted = day.format("YYYY-MM-DD");
-            const isSelected = formatted === selectedDate;
-            const hasSlots = selectedSlots[formatted]?.length > 0;
-
-            return (
-              <div
-                key={formatted}
-                onClick={() => setSelectedDate(formatted)}
-                className={`min-w-[70px] p-2 text-center rounded-xl cursor-pointer snap-center 
+              return (
+                <div
+                  key={formatted}
+                  onClick={() => setSelectedDate(formatted)}
+                  className={`min-w-[70px] p-2 text-center rounded-xl cursor-pointer snap-center 
                   ${
                     isSelected
                       ? "bg-red-500 text-white font-bold"
@@ -185,26 +190,27 @@ export default function BookingCalender({
                       ? "bg-blue-100 text-black border border-blue-300"
                       : "bg-gray-100 text-black"
                   }`}
-              >
-                <div className="text-sm">{day.format("ddd")}</div>
-                <div className="text-lg">{day.format("D")}</div>
-                {hasSlots && (
-                  <div className="text-xs mt-1">
-                    {selectedSlots[formatted].length} slots
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                >
+                  <div className="text-sm">{day.format("ddd")}</div>
+                  <div className="text-lg">{day.format("D")}</div>
+                  {hasSlots && (
+                    <div className="text-xs mt-1">
+                      {selectedSlots[formatted].length} slots
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
 
-        <button
-          onClick={() => scroll("right")}
-          className="p-1 rounded-full hover:bg-gray-200"
-        >
-          <ChevronRight size={28} />
-        </button>
-      </div>
+          <button
+            onClick={() => scroll("right")}
+            className="p-1 rounded-full hover:bg-gray-200"
+          >
+            <ChevronRight size={28} />
+          </button>
+        </div>
+      )}
       {error && <p className=" text-sm text-red-600">{error}</p>}
 
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">

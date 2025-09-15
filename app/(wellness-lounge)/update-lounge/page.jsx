@@ -5,8 +5,10 @@ import { useEffect, useState } from "react";
 import Models from "@/imports/models.import";
 import {
   Dropdown,
+  buildFormData,
   convertUrlToFile,
   getFileNameFromUrl,
+  getTimeZone,
   getUnmatchedSlots,
   isValidImageUrl,
   useSetState,
@@ -30,6 +32,8 @@ import Select from "react-select";
 import dynamic from "next/dynamic";
 import { AYURVEDIC_LOUNGE, getTimeIntervals } from "@/utils/constant.utils";
 import LoadMoreDropdown from "@/components/common-components/loadMoreDropdown";
+import TimezoneSelector from "@/components/common-components/TimezoneSelect";
+
 // import DateTimeField from "@/components/common-components/DateTimeField"
 
 // Dynamically import DateTimeField to avoid hydration issues (if needed)
@@ -77,6 +81,7 @@ const UpdateWellnessLounge = () => {
     slots: [],
     isAnyBooked: false,
     intrested_topics: [],
+    passcode: "",
   });
 
   useEffect(() => {
@@ -100,6 +105,13 @@ const UpdateWellnessLounge = () => {
         setState({
           thumbnail_images: thumbnail,
           thumbnail_image: res?.thumbnail,
+        });
+      }
+
+      if (res?.timezone) {
+        setState({
+          timezone: getTimeZone(res?.timezone),
+          timezones: res?.timezone,
         });
       }
       if (res?.intrested_topics?.length > 0) {
@@ -141,6 +153,7 @@ const UpdateWellnessLounge = () => {
         seat_count: Number(res?.seat_count),
         isFeatured: res?.is_featured,
         loading: false,
+        passcode: res?.passcode,
         // lable: res?.lable,
       });
     } catch (error) {
@@ -201,9 +214,10 @@ const UpdateWellnessLounge = () => {
   const onSubmit = async () => {
     try {
       setState({ submitLoading: true });
-      let body = {
-        description: state.description ? state.description : "",
+
+      let validForFree = {
         title: state.title,
+        lounge_type: state.lounge_type ? state.lounge_type?.value : null,
         start_date: state.start_date
           ? moment(state.start_date).format("YYYY-MM-DD")
           : null,
@@ -211,69 +225,132 @@ const UpdateWellnessLounge = () => {
           ? moment(state.end_date).format("YYYY-MM-DD")
           : null,
         end_time: state.end_time
-          ? moment(state.end_time).format("HH:mm")
+          ? moment(state.end_time).format("HH:mm:ss")
           : null,
         start_time: state.start_time
-          ? moment(state.start_time).format("HH:mm")
+          ? moment(state.start_time).format("HH:mm:ss")
           : null,
-        price: state.price ? state.price : 0,
-        session_link: state.session_link,
-        seat_count: state.seat_count,
-        lounge_type: state.lounge_type ? state.lounge_type?.value : null,
-        thumbnail_image: state.thumbnail_images,
-        is_featured: state.isFeatured,
-        slot: state.lounge_type?.value == AYURVEDIC_LOUNGE ? state.slots : [],
-        interval:
-          state.lounge_type?.value == AYURVEDIC_LOUNGE && state.interval
-            ? state.interval
-            : 30,
+        timezone: state?.timezone,
         moderator: state.moderator?.value,
         intrested_topics:
           state?.intrested_topics?.length > 0
             ? state?.intrested_topics?.map((item) => item.value)
             : [],
-        lable: state?.lable || "",
+        session_link: state.session_link,
+        thumbnail_image: state.thumbnail_images,
       };
-      console.log("body: ", body);
 
-      let formData = new FormData();
-      formData.append("description", body.description);
-      formData.append("title", body.title);
-      formData.append("start_date", body.start_date);
-      formData.append("end_date", body.end_date);
-      formData.append("event_type", body.lounge_type);
-      formData.append("price", body.price);
-      formData.append("start_time", body.start_time);
-      formData.append("end_time", body.end_time);
-      formData.append("session_link", body.session_link);
-      formData.append("seat_count", body.seat_count);
-      formData.append("lounge_type", body.lounge_type);
-      formData.append("is_featured", body.is_featured);
-      formData.append("moderator", body.moderator);
-      {
-        body.intrested_topics?.map((item) =>
-          formData.append("intrested_topics", item)
-        );
-      }
-      formData.append("lable", body.lable);
+      let validForPaid = {
+        title: state.title,
+        start_date: state.start_date
+          ? moment(state.start_date).format("YYYY-MM-DD")
+          : null,
 
-      if (body.thumbnail_image) {
-        formData.append("thumbnail", body.thumbnail_image);
+        end_date: state.end_date
+          ? moment(state.end_date).format("YYYY-MM-DD")
+          : null,
+
+        session_link: state.session_link,
+        lounge_type: state.lounge_type ? state.lounge_type?.value : null,
+        thumbnail_image: state.thumbnail_images,
+        slot: state.slots,
+        interval: state.interval,
+        moderator: state.moderator?.value,
+        intrested_topics:
+          state?.intrested_topics?.length > 0
+            ? state?.intrested_topics?.map((item) => item.value)
+            : [],
+        timezone: state?.timezone,
+      };
+
+      if (state.lounge_type?.value == AYURVEDIC_LOUNGE) {
+        await Validation.createPaidSession.validate(validForPaid, {
+          abortEarly: false,
+        });
       } else {
-        formData.append("thumbnail", "");
+        await Validation.createFreeSession.validate(validForFree, {
+          abortEarly: false,
+        });
       }
-      await Validation.createSession.validate(body, {
-        abortEarly: false,
-      });
-      const res = await Models.session.update(formData, id);
-      await createSlot();
 
-      setState({ submitLoading: false });
+      if (state.lounge_type?.value == AYURVEDIC_LOUNGE) {
+        await updatePaidSession();
+      } else {
+        await updateFreeSession();
+      }
+      // let body = {
+      //   description: state.description ? state.description : "",
+      //   title: state.title,
+      //   start_date: state.start_date
+      //     ? moment(state.start_date).format("YYYY-MM-DD")
+      //     : null,
+      //   end_date: state.end_date
+      //     ? moment(state.end_date).format("YYYY-MM-DD")
+      //     : null,
+      //   end_time: state.end_time
+      //     ? moment(state.end_time).format("HH:mm")
+      //     : null,
+      //   start_time: state.start_time
+      //     ? moment(state.start_time).format("HH:mm")
+      //     : null,
+      //   price: state.price ? state.price : 0,
+      //   session_link: state.session_link,
+      //   seat_count: state.seat_count,
+      //   lounge_type: state.lounge_type ? state.lounge_type?.value : null,
+      //   thumbnail_image: state.thumbnail_images,
+      //   is_featured: state.isFeatured,
+      //   slot: state.lounge_type?.value == AYURVEDIC_LOUNGE ? state.slots : [],
+      //   interval:
+      //     state.lounge_type?.value == AYURVEDIC_LOUNGE && state.interval
+      //       ? state.interval
+      //       : 30,
+      //   moderator: state.moderator?.value,
+      //   intrested_topics:
+      //     state?.intrested_topics?.length > 0
+      //       ? state?.intrested_topics?.map((item) => item.value)
+      //       : [],
+      //   lable: state?.lable || "",
+      // };
+      // console.log("body: ", body);
 
-      router.push("/wellness-lounge-list");
-      Success(
-        `The session ${state.title} under the ${state.lounge_type?.label} category has been updated. All changes are now live and reflected across participant dashboards.`
-      );
+      // let formData = new FormData();
+      // formData.append("description", body.description);
+      // formData.append("title", body.title);
+      // formData.append("start_date", body.start_date);
+      // formData.append("end_date", body.end_date);
+      // formData.append("event_type", body.lounge_type);
+      // formData.append("price", body.price);
+      // formData.append("start_time", body.start_time);
+      // formData.append("end_time", body.end_time);
+      // formData.append("session_link", body.session_link);
+      // formData.append("seat_count", body.seat_count);
+      // formData.append("lounge_type", body.lounge_type);
+      // formData.append("is_featured", body.is_featured);
+      // formData.append("moderator", body.moderator);
+      // {
+      //   body.intrested_topics?.map((item) =>
+      //     formData.append("intrested_topics", item)
+      //   );
+      // }
+      // formData.append("lable", body.lable);
+
+      // if (body.thumbnail_image) {
+      //   formData.append("thumbnail", body.thumbnail_image);
+      // } else {
+      //   formData.append("thumbnail", "");
+      // }
+      // await Validation.createSession.validate(body, {
+      //   abortEarly: false,
+      // });
+      // const res = await Models.session.update(formData, id);
+      // await createSlot();
+
+      // setState({ submitLoading: false });
+
+      // router.push("/wellness-lounge-list");
+      // Success(
+      //   `The session ${state.title} under the ${state.lounge_type?.label} category has been updated. All changes are now live and reflected across participant dashboards.`
+      // );
     } catch (error) {
       // console.log("error", error?.end_date[0])
       console.log("error", error);
@@ -324,6 +401,124 @@ const UpdateWellnessLounge = () => {
         // setState({ errors:[errros] });
         setState({ submitLoading: false });
       }
+    }
+  };
+
+  const updateFreeSession = async (res) => {
+    try {
+      let body = {
+        title: state.title,
+        description: state.description ? state.description : "",
+        lounge_type: state.lounge_type ? state.lounge_type?.value : null,
+
+        start_date: state.start_date
+          ? moment(state.start_date).format("YYYY-MM-DD")
+          : null,
+        end_date: state.end_date
+          ? moment(state.end_date).format("YYYY-MM-DD")
+          : null,
+        end_time: state.end_time
+          ? moment(state.end_time).format("HH:mm:ss")
+          : null,
+        start_time: state.start_time
+          ? moment(state.start_time).format("HH:mm:ss")
+          : null,
+        timezone: state?.timezones,
+        moderator: state.moderator?.value,
+        intrested_topics:
+          state?.intrested_topics?.length > 0
+            ? state?.intrested_topics?.map((item) => item.value)
+            : [],
+        session_link: state.session_link,
+        passcode: state?.passcode,
+        thumbnail: state.thumbnail_images,
+        event_credits: state.price ? state.price : 0,
+        price: state.price ? state.price : 0,
+      };
+
+      const formData = buildFormData(body);
+
+      const res = await Models.session.update(formData, id);
+
+      setState({ submitLoading: false });
+
+      router.back();
+      Success(
+        `The session ${state.title} under the ${state.lounge_type?.label} category has been updated. All changes are now live and reflected across participant dashboards.`
+      );
+    } catch (error) {
+      setState({ submitLoading: false });
+      console.log("error: ", error);
+    }
+  };
+
+  const updatePaidSession = async (res) => {
+    try {
+      let body = {
+        title: state.title,
+        description: state.description ? state.description : "",
+        lounge_type: state.lounge_type ? state.lounge_type?.value : null,
+        start_date: state.start_date
+          ? moment(state.start_date).format("YYYY-MM-DD")
+          : null,
+        end_date: state.end_date
+          ? moment(state.end_date).format("YYYY-MM-DD")
+          : null,
+        interval: state.interval,
+
+        timezone: state?.timezones,
+        moderator: state.moderator?.value,
+        intrested_topics:
+          state?.intrested_topics?.length > 0
+            ? state?.intrested_topics?.map((item) => item.value)
+            : [],
+        session_link: state.session_link,
+        passcode: state?.passcode,
+        price: state.price ? state.price : 0,
+        seat_count: state.seat_count || 0,
+        thumbnail: state.thumbnail_images,
+      };
+
+      if (state.slots?.length > 0) {
+        const slotsWithTime = state.slots.filter(
+          (slot) => slot.slot?.length > 0
+        );
+
+        if (slotsWithTime.length > 0) {
+          const firstSlot = slotsWithTime[0];
+
+          let highestTime = "";
+
+          slotsWithTime.forEach((slot) => {
+            slot.slot.forEach((time) => {
+              if (!highestTime || time > highestTime) {
+                highestTime = time;
+              }
+            });
+          });
+
+          const start_time = firstSlot.slot[0];
+          const end_time = highestTime;
+
+          body.start_time = moment(start_time, "HH:mm").format("HH:mm");
+          body.end_time = moment(end_time, "HH:mm").format("HH:mm");
+        }
+      }
+
+      const formData = buildFormData(body);
+
+      const res = await Models.session.update(formData, id);
+      await createSlot();
+      setState({ submitLoading: false });
+
+      router.back();
+
+      Success(
+        `The session ${state.title} under the ${state.lounge_type?.label} category has been updated. All changes are now live and reflected across participant dashboards.`
+      );
+    } catch (error) {
+      setState({ submitLoading: false });
+      console.log("error: ", error);
     }
   };
 
@@ -412,6 +607,7 @@ const UpdateWellnessLounge = () => {
       };
     }
   };
+  console.log("✌️state.timezone --->", state.timezone);
 
   return state.loading ? (
     <div className="container mx-auto flex justify-center items-center ">
@@ -447,46 +643,6 @@ const UpdateWellnessLounge = () => {
             placeholder="Description"
             title="Description"
           />
-
-          <div className="grid auto-rows-min gap-4 grid-cols-2">
-            <DateTimeField
-              disabled={state.isAnyBooked}
-              label={`Start Date & Time (Choose both date & time)`}
-              placeholder="Start Date & Time"
-              value={state.combinedStartDateTime}
-              onChange={(date) => {
-                setState({
-                  ...state,
-                  combinedStartDateTime: date,
-                  start_date: date,
-                  start_time: date,
-                  // end_date: null,
-                  errors: { ...state.errors, start_date: "", start_time: "" },
-                });
-              }}
-              error={state.errors?.start_date || state.errors?.start_time}
-              required
-              fromDate={new Date()}
-            />
-
-            <DateTimeField
-              label="End Date & Time (Choose both date & time)"
-              placeholder="End Date & Time"
-              value={state.combinedEndDateTime}
-              onChange={(date) => {
-                setState({
-                  ...state,
-                  combinedEndDateTime: date,
-                  end_date: date,
-                  end_time: date,
-                  errors: { ...state.errors, end_date: "", end_time: "" },
-                });
-              }}
-              error={state.errors?.end_date || state.errors?.end_time}
-              required
-              fromDate={!state.isAnyBooked ? state.end_date : state.start_date}
-            />
-          </div>
           <CustomSelect
             options={state.categoryList}
             value={state.lounge_type?.value || ""}
@@ -501,6 +657,129 @@ const UpdateWellnessLounge = () => {
             required
             disabled={state.isAnyBooked}
           />
+
+          {state.lounge_type?.value == AYURVEDIC_LOUNGE && (
+            <>
+              <div className="w-full grid auto-rows-min gap-4 md:grid-cols-2">
+                <DatePicker
+                  placeholder="Start Date"
+                  title="Start Date"
+                  required
+                  error={state.errors?.start_date}
+                  closeIcon={true}
+                  selectedDate={state.start_date}
+                  onChange={(date) => {
+                    setState({
+                      start_date: date,
+                    });
+                  }}
+                  disabled={state.isAnyBooked}
+                />
+
+                <DatePicker
+                  placeholder="End Date"
+                  title="End Date"
+                  required
+                  error={state.errors?.end_date}
+                  closeIcon={true}
+                  selectedDate={state.end_date}
+                  onChange={(date) => {
+                    setState({
+                      end_date: date,
+                      errors: { ...state.errors, end_date: "" },
+                    });
+                  }}
+                  fromDate={state.start_date}
+                />
+                <TimezoneSelector
+                  title="Timezone"
+                  required
+                  error={state.errors?.timezone}
+                  value={state.timezone}
+                  onChange={(tz) => {
+                    setState({
+                      timezone: tz?.value,
+                      timezones: tz?.label,
+                      errors: { ...state.errors, timezone: "" },
+                    });
+                  }}
+                />
+              </div>
+
+              <SlideCalender
+                startDate={state.start_date}
+                endDate={state.end_date}
+                slotInterval={state.interval || 30}
+                getSlots={(data) => {
+                  setState({ slots: data });
+                }}
+                error={state.errors?.slot}
+                eventSlot={state.eventSlot}
+              />
+            </>
+          )}
+          {state.lounge_type?.value != AYURVEDIC_LOUNGE && (
+            <>
+              <div className="grid auto-rows-min gap-4 grid-cols-2">
+                <DateTimeField
+                  disabled={state.isAnyBooked}
+                  label={`Start Date & Time (Choose both date & time)`}
+                  placeholder="Start Date & Time"
+                  value={state.combinedStartDateTime}
+                  onChange={(date) => {
+                    setState({
+                      ...state,
+                      combinedStartDateTime: date,
+                      start_date: date,
+                      start_time: date,
+                      // end_date: null,
+                      errors: {
+                        ...state.errors,
+                        start_date: "",
+                        start_time: "",
+                      },
+                    });
+                  }}
+                  error={state.errors?.start_date || state.errors?.start_time}
+                  required
+                  fromDate={new Date()}
+                />
+
+                <DateTimeField
+                  label="End Date & Time (Choose both date & time)"
+                  placeholder="End Date & Time"
+                  value={state.combinedEndDateTime}
+                  onChange={(date) => {
+                    setState({
+                      ...state,
+                      combinedEndDateTime: date,
+                      end_date: date,
+                      end_time: date,
+                      errors: { ...state.errors, end_date: "", end_time: "" },
+                    });
+                  }}
+                  error={state.errors?.end_date || state.errors?.end_time}
+                  required
+                  fromDate={
+                    !state.isAnyBooked ? state.end_date : state.start_date
+                  }
+                />
+              </div>
+              <TimezoneSelector
+                title="Timezone"
+                required
+                error={state.errors?.timezone}
+                value={state.timezone}
+                onChange={(tz) => {
+                  setState({
+                    timezone: tz?.value,
+                    timezones: tz?.label,
+                    errors: { ...state.errors, timezone: "" },
+                  });
+                }}
+              />
+            </>
+          )}
           {state.lounge_type?.value == AYURVEDIC_LOUNGE && (
             <>
               {/* <CustomSelect
@@ -516,16 +795,6 @@ const UpdateWellnessLounge = () => {
                 error={state.errors?.interval}
                 required
               /> */}
-              <SlideCalender
-                startDate={state.start_date}
-                endDate={state.end_date}
-                slotInterval={state.interval || 30}
-                getSlots={(data) => {
-                  setState({ slots: data });
-                }}
-                error={state.errors?.slot}
-                eventSlot={state.eventSlot}
-              />
             </>
           )}
         </div>
@@ -546,7 +815,6 @@ const UpdateWellnessLounge = () => {
             placeholder="Select Mentor"
             loadOptions={loadMendorList}
             disabled={state.isAnyBooked}
-
           />
           <div className="space-y-1">
             <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -610,28 +878,43 @@ const UpdateWellnessLounge = () => {
             // disabled={state.isAnyBooked}
           />
           <TextInput
+            value={state.passcode}
+            onChange={(e) => {
+              setState({ passcode: e.target.value });
+            }}
+            placeholder={"PassCode"}
+            title={"PassCode"}
+            type="text"
+            error={state.errors?.price}
+          />
+          <TextInput
             value={state.price}
             onChange={(e) => {
               setState({ price: e.target.value });
             }}
-            placeholder="Price"
-            title="Price"
+            placeholder={
+              state.lounge_type?.value == AYURVEDIC_LOUNGE ? "Price" : "Credits"
+            }
+            title={
+              state.lounge_type?.value == AYURVEDIC_LOUNGE ? "Price" : "Credits"
+            }
             type="number"
             error={state.errors?.price}
             disabled={state.isAnyBooked}
           />
-
-          <TextInput
-            value={state.seat_count}
-            onChange={(e) => {
-              setState({ seat_count: e.target.value });
-            }}
-            placeholder="Seat Count"
-            title="Seat Count"
-            type="number"
-            error={state.errors?.seat_count}
-            disabled={state.isAnyBooked}
-          />
+          {state.lounge_type?.value == AYURVEDIC_LOUNGE && (
+            <TextInput
+              value={state.seat_count}
+              onChange={(e) => {
+                setState({ seat_count: e.target.value });
+              }}
+              placeholder="Seat Count"
+              title="Seat Count"
+              type="number"
+              error={state.errors?.seat_count}
+              disabled={state.isAnyBooked}
+            />
+          )}
           {/* <CheckboxDemo
             label="Featured Lounge"
             value="isFeatured"

@@ -69,8 +69,12 @@ const LoginForm = (props) => {
             userId: res.user_id,
             username: res?.username || "",
           });
-          router.push(`/`);
-          // window.location.reload(); 
+          setState({ googleLoading: false });
+
+          router.push("/");
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
         } else {
           await updateUserGroup(res);
         }
@@ -108,7 +112,8 @@ const LoginForm = (props) => {
           username: res?.username || "",
         })
       );
-      router.push(`/update-user-data?id=${res?.user_id}`);
+      router.replace(`/update-user-data?id=${res?.user_id}`);
+      setState({ googleLoading: false });
     } catch (error) {
       console.error("Error updating user group:", error);
       throw error;
@@ -196,139 +201,147 @@ const LoginForm = (props) => {
   };
 
   return (
-    <GoogleOAuthProvider clientId={CLIENT_ID}>
-      <div className="flex items-center justify-center">
-        <Card className="md:w-[400px] w-[100%]">
-          <CardHeader>
-            <CardTitle className="text-2xl">Login</CardTitle>
-            <CardDescription>
-              Enter your email below to login to your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form autoComplete="off">
-              <div className="flex flex-col gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    name="user_login_email"
-                    placeholder="Enter Your mail ID"
-                    required
-                    value={state.username}
-                    onChange={(e) =>
-                      setState({
-                        username: e.target.value,
-                        errors: { ...state.errors, email: "" },
-                      })
-                    }
-                    error={state.errors?.email}
-                    autoComplete="off"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
-                    <a
-                      href="/forgot-password-email"
-                      className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                    >
-                      Forgot your password?
-                    </a>
-                  </div>
+    <>
+      {state.googleLoading ? (
+        <div className="flex md:min-h-[70vh] min-h-[60vh] w-full items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        </div>
+      ) : (
+        <GoogleOAuthProvider clientId={CLIENT_ID}>
+          <div className="flex items-center justify-center">
+            <Card className="md:w-[400px] w-[100%]">
+              <CardHeader>
+                <CardTitle className="text-2xl">Login</CardTitle>
+                <CardDescription>
+                  Enter your email below to login to your account
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form autoComplete="off">
+                  <div className="flex flex-col gap-6">
+                    <div className="grid gap-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        name="user_login_email"
+                        placeholder="Enter Your mail ID"
+                        required
+                        value={state.username}
+                        onChange={(e) =>
+                          setState({
+                            username: e.target.value,
+                            errors: { ...state.errors, email: "" },
+                          })
+                        }
+                        error={state.errors?.email}
+                        autoComplete="off"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <div className="flex items-center">
+                        <Label htmlFor="password">Password</Label>
+                        <a
+                          href="/forgot-password-email"
+                          className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                        >
+                          Forgot your password?
+                        </a>
+                      </div>
 
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={state.showPassword ? "text" : "password"}
-                      placeholder="Enter Your Password"
-                      required
-                      name="user_login_password"
-                      value={state.password}
-                      onChange={(e) =>
-                        setState({
-                          password: e.target.value,
-                          errors: { ...state.errors, password: "" },
-                        })
-                      }
-                      error={state.errors?.password}
-                      className="pr-10"
-                      autoComplete="off"
-                    />
-                    <button
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          type={state.showPassword ? "text" : "password"}
+                          placeholder="Enter Your Password"
+                          required
+                          name="user_login_password"
+                          value={state.password}
+                          onChange={(e) =>
+                            setState({
+                              password: e.target.value,
+                              errors: { ...state.errors, password: "" },
+                            })
+                          }
+                          error={state.errors?.password}
+                          className="pr-10"
+                          autoComplete="off"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setState({ showPassword: !state.showPassword });
+                          }}
+                          className={` ${
+                            state.errors?.password
+                              ? "absolute top-2 right-3 flex items-center text-muted-foreground hover:text-foreground focus:outline-none"
+                              : "absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground focus:outline-none"
+                          }`}
+                        >
+                          {state?.showPassword ? (
+                            <EyeOff size={18} />
+                          ) : (
+                            <Eye size={18} />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <Button
                       type="button"
-                      onClick={() => {
-                        setState({ showPassword: !state.showPassword });
-                      }}
-                      className={` ${
-                        state.errors?.password
-                          ? "absolute top-2 right-3 flex items-center text-muted-foreground hover:text-foreground focus:outline-none"
-                          : "absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-foreground focus:outline-none"
-                      }`}
+                      className="w-full bg-themeGreen hover:bg-themeGreen"
+                      onClick={handleSubmit}
+                      disabled={state.loading}
                     >
-                      {state?.showPassword ? (
-                        <EyeOff size={18} />
+                      {state.loading ? (
+                        <Loader className="animate-spin" />
                       ) : (
-                        <Eye size={18} />
+                        "Login"
                       )}
-                    </button>
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  className="w-full bg-themeGreen hover:bg-themeGreen"
-                  onClick={handleSubmit}
-                  disabled={state.loading}
-                >
-                  {state.loading ? (
-                    <Loader className="animate-spin" />
-                  ) : (
-                    "Login"
-                  )}
-                </Button>
+                    </Button>
 
-                <div className="relative p-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      Or continue with
-                    </span>
-                  </div>
-                </div>
+                    <div className="relative p-4">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                          Or continue with
+                        </span>
+                      </div>
+                    </div>
 
-                <div className="flex flex-col gap-3 w-full">
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
-                    useOneTap={false}
-                    shape="rectangular"
-                    theme="outline"
-                    size="large"
-                    text="signin_with"
-                    logo_alignment="left"
-                    width="300"
-                  />
-                </div>
+                    <div className="flex flex-col gap-3 w-full">
+                      <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={handleGoogleError}
+                        useOneTap={false}
+                        shape="rectangular"
+                        theme="outline"
+                        size="large"
+                        text="signin_with"
+                        logo_alignment="left"
+                        width="300"
+                      />
+                    </div>
 
-                <p className="text-center text-[14px]">
-                  Don't have an account?{" "}
-                  <Link
-                    href="/registration"
-                    className="underline"
-                    prefetch={true}
-                  >
-                    Sign up
-                  </Link>{" "}
-                </p>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </GoogleOAuthProvider>
+                    <p className="text-center text-[14px]">
+                      Don't have an account?{" "}
+                      <Link
+                        href="/registration"
+                        className="underline"
+                        prefetch={true}
+                      >
+                        Sign up
+                      </Link>{" "}
+                    </p>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </GoogleOAuthProvider>
+      )}
+    </>
   );
 };
 

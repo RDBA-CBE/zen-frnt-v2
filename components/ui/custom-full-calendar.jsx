@@ -46,7 +46,6 @@ const CustomFullCalendar = ({ events, setEvents }) => {
   const [lougeList, setLoungeList] = useState([]);
   const [token, setToken] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  console.log("✌️selectedEvent --->", selectedEvent?.eventDate);
   const [state, setState] = useSetState({
     categoryList: [],
     loading: false,
