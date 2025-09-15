@@ -51,6 +51,7 @@
     "app/(wellness-lounge)/view-wellness-lounge/page.jsx",
     "app/(wellness-lounge)/view-user/page.jsx",
     "app/(wellness-lounge)/view-order/page.jsx",
+    "app/(wellness-lounge)/view-orders/page.jsx",
     "app/(wellness-lounge)/user-list/page.jsx",
     "app/(wellness-lounge)/update-user/page.jsx",
     "app/layout.jsx",
