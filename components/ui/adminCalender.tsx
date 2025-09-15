@@ -263,7 +263,7 @@ const AdminCalendar = ({ registrations }) => {
   const handleOrderClick = (item) => {
     console.log("✌️item --->", item);
     if (item?.lounge_type?.id == AYURVEDIC_LOUNGE) {
-      router.push(`/view-orders/?id=${item?.id}`);
+      router.push(`/view-paid-order/?id=${item?.id}`);
     } else {
       router.push(`/view-order/?id=${item?.id}`);
     }

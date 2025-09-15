@@ -170,7 +170,7 @@ const ProfilePage = () => {
           <Link
             href={
               row?.event?.lounge_type?.id == AYURVEDIC_LOUNGE
-                ? `/view-orders?id=${row?.id}`
+                ? `/view-paid-order?id=${row?.id}`
                 : `/view-order?id=${row?.id}`
             }
             className="pointer"

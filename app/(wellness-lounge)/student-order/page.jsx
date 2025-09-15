@@ -239,7 +239,7 @@ const WellnessLoungeList = () => {
           <Link
             href={
               row?.row?.event?.lounge_type?.id == AYURVEDIC_LOUNGE
-                ? `/view-orders?id=${row?.row?.id}`
+                ? `/view-paid-order?id=${row?.row?.id}`
                 : `/view-order?id=${row?.row?.id}`
             }
             className="pointer"

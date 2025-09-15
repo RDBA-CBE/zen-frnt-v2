@@ -188,7 +188,7 @@ const WellnessLoungeList = () => {
 
   const handleView = (item) => {
     if (item?.event?.lounge_type?.id == AYURVEDIC_LOUNGE) {
-      router.push(`/view-orders/?id=${item?.id}`);
+      router.push(`/view-paid-order/?id=${item?.id}`);
     } else {
       router.push(`/view-order/?id=${item?.id}`);
     }
